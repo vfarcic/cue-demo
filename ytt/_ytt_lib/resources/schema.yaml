@@ -1,0 +1,122 @@
+#@data/values-schema
+
+---
+
+kubeconfig:
+  secret: "%s-cluster"
+  key: kubeconfig
+provider: 
+  name: none
+  version: v0.0.0
+  config:
+    enabled: true
+    apiVersion: none
+    secretName: none
+charts:
+  nginxIngress:
+    version: "4.2.0"
+  crossplane:
+    version: "1.9.0"
+  schemahero:
+    version: "1.1.2"
+providers:
+  kubernetes:
+    version: "v0.4.0"
+    package: xpkg.upbound.io/crossplane-contrib/provider-kubernetes:v0.6.0
+    controllerConfigRef:
+      name: provider-kubernetes
+  helm:
+    version: "v0.10.0"
+    package: xpkg.upbound.io/crossplane-contrib/provider-helm:v0.12.0
+    controllerConfigRef:
+      name: provider-kubernetes
+  sql:
+    version: "v0.5.0"
+    package: crossplane/provider-sql:v0.5.0
+configurations:
+  app:
+    package: "xpkg.upbound.io/devops-toolkit/dot-application:v0.3.9"
+  monitoring:
+    package: "xpkg.upbound.io/devops-toolkit/dot-monitoring:v0.0.41"
+  sql:
+    package: "xpkg.upbound.io/devops-toolkit/dot-sql:v0.4.13"
+namespaces:
+  prod:
+    name: production
+  dev:
+    name: dev
+identity:
+  enabled: false
+  type: ""
+  secretRef:
+    name: ""
+    namespace: crossplane-system
+    key: creds
+azure:
+  version: "1.23.5"
+aws:
+  version: "1.22"
+  roles:
+    controlplane:
+      assumeRolePolicyDocument: |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Principal": {
+                      "Service": [
+                          "eks.amazonaws.com"
+                      ]
+                  },
+                  "Action": [
+                      "sts:AssumeRole"
+                  ]
+              }
+          ]
+        }
+    nodegroup:
+      assumeRolePolicyDocument: |
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                  "Effect": "Allow",
+                  "Principal": {
+                      "Service": [
+                          "ec2.amazonaws.com"
+                      ]
+                  },
+                  "Action": [
+                      "sts:AssumeRole"
+                  ]
+              }
+          ]
+        }
+  iamAttachements:
+    controlplane:
+      policyArn: arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+      roleSelector: controlplane
+    service:
+      policyArn: arn:aws:iam::aws:policy/AmazonEKSServicePolicy
+      roleSelector: controlplane
+    worker:
+      policyArn: arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
+      roleSelector: nodegroup
+    cni:
+      policyArn: arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
+      roleSelector: nodegroup
+    registry:
+      policyArn: arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      roleSelector: nodegroup
+  subnets:
+    1a:
+      cidrBlock: 10.0.0.0/24
+    1b:
+      cidrBlock: 10.0.1.0/24
+    1c:
+      cidrBlock: 10.0.2.0/24
+do:
+  version: "1.22.7-do.0"
+google:
+  version: latest
